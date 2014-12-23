@@ -1,0 +1,59 @@
+#include <sys/socket.h>  
+#include <netinet/in.h>  
+#include <stdio.h>  
+#include <string.h>  
+#include <stdlib.h> 
+#include <arpa/inet.h> 
+#include <unistd.h>
+#include <netdb.h> 
+
+main(int argc, char *argv[]) 
+{ 
+	struct hostent *hp;
+	int portno, sock_des;
+
+	if(argc != 3) {
+		printf("Error in Given Arguments\n");	
+	}
+
+	sock_des = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock_des  == -1)  {
+        printf("Cannot create socket!\n");
+        return 0;
+    } else {
+		printf("Socket Created\n");
+    }
+
+	hp = gethostbyname(argv[1]);
+	if (hp == NULL) {
+		perror("Error in IP Connection\n");
+	}
+	
+	struct sockaddr_in server;  
+    memset(&server, 0, sizeof(server));  
+    server.sin_family = AF_INET; 
+	server.sin_addr = *((struct in_addr *)hp->h_addr);
+    server.sin_port = htons(atoi(argv[2]);
+	while (1) {
+		char buf[100]="";
+		printf("Enter to Send \n");
+		scanf("%s", buf);
+		int len = strlen(buf);
+
+		if (sendto(sock_des, buf, len, 0,(struct sockaddr *)&server, sizeof(struct sockaddr)) != -1) {
+			printf("Data Send\n");
+			if (strcmp(buf, "exit") == 0) {
+				break;
+			}
+		} else {
+			perror("Error in Writing to Server\n");
+			exit(0);
+		}
+	}
+
+	close(sock_des);  
+    printf("Client Disconnected\n");
+
+    return 0;  
+} 
+
